@@ -1,1 +1,25 @@
-
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Apex MM</title><style>
+body{background:#0b1120;color:#f1f5f9;font-family:sans-serif;padding:20px;max-width:1000px;margin:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0}
+.card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:14px}
+.lbl{color:#94a3b8;font-size:11px;text-transform:uppercase}.val{font-size:22px;font-weight:700;margin:4px 0}
+.pos{color:#22c55e}.neg{color:#ef4444}table{width:100%;border-collapse:collapse;background:#111827}
+th,td{padding:9px 11px;border-bottom:1px solid #1f2937;text-align:left;font-size:13px}th{color:#94a3b8}
+</style></head><body><h2>APEX MM // LIVE TELEMETRY</h2><div id="ts" style="color:#94a3b8;font-size:12px">Loading...</div>
+<div class="grid">
+<div class="card"><div class="lbl">Equity</div><div class="val" id="eq">--</div><div id="pnl"></div></div>
+<div class="card"><div class="lbl">Uptime</div><div class="val" id="up">--</div><div id="md"></div></div>
+<div class="card"><div class="lbl">Pair / Cash</div><div class="val" id="act">--</div><div id="pos"></div></div>
+<div class="card"><div class="lbl">AI / RAM</div><div class="val" id="ai">--</div><div id="ram"></div></div>
+</div><table><thead><tr><th>Time UTC</th><th>Pair</th><th>Side</th><th>Price</th><th>Size</th><th>Notional</th><th>Fee</th><th>P&L</th></tr></thead>
+<tbody id="tb"></tbody></table><script>
+async function r(){const d=await(await fetch("data.json?t="+Date.now())).json();const h=d.heartbeat;const diff=h.equity-125;
+eq.textContent="$"+h.equity.toFixed(4);pnl.textContent=(diff>=0?"+":"")+"$"+diff.toFixed(4);pnl.className=diff>=0?"pos":"neg";
+up.textContent=(h.uptime_s/3600).toFixed(2)+" hrs";md.textContent=h.mode.toUpperCase()+" / "+h.risk.level;
+act.textContent=(h.active||[]).join(", ")||"None";const p=Object.entries(h.positions||{});
+pos.textContent=p.length?p.map(([k,v])=>k+": "+v).join(", "):"100% Cash";
+ai.textContent=h.ai.level+" ("+h.ai.probability.toFixed(3)+")";ram.textContent=h.ai.rss_mb+" MB | DD "+h.risk.drawdown_pct+"%";
+ts.textContent="Updated: "+h.ts;
+tb.innerHTML=(d.trades||[]).map(t=>`<tr><td>${t.ts_utc.slice(0,19).replace("T"," ")}</td><td><b>${t.symbol}</b></td><td class="${t.side==="buy"?"pos":"neg"}">${t.side.toUpperCase()}</td><td>$${Number(t.px).toFixed(5)}</td><td>${t.sz}</td><td>$${Number(t.notional).toFixed(2)}</td><td>$${Number(t.fee).toFixed(4)}</td><td class="${t.closed_pnl>0?"pos":t.closed_pnl<0?"neg":""}">${t.closed_pnl?Number(t.closed_pnl).toFixed(4):"--"}</td></tr>`).join("");}
+r();setInterval(r,30000);</script></body></html>
